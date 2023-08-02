@@ -146,5 +146,5 @@ def docfile(client: pyrogram.client.Client, message: pyrogram.types.messages_and
 
 
 # server loop
-print("Bot Starting")
+print("Bot Started")
 app.run()
