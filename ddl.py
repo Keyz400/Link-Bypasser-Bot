@@ -24,15 +24,13 @@ if ndus is None: TERA_COOKIE = None
 else: TERA_COOKIE = {"ndus": ndus}
 
 
-ddllist = ['yadi.sk','disk.yandex.com','mediafire.com','uptobox.com','osdn.net','github.com',
-'hxfile.co','1drv.ms','pixeldrain.com','antfiles.com','streamtape','racaty','1fichier.com',
-'solidfiles.com','krakenfiles.com','mdisk.me','upload.ee','akmfiles','linkbox','shrdsk','letsupload.io',
-'zippyshare.com','wetransfer.com','we.tl','terabox','nephobox','4funbox','mirrobox','momerybox',
-'teraboxapp','sbembed.com','watchsb.com','streamsb.net','sbplay.org','filepress',
-'fembed.net', 'fembed.com', 'femax20.com', 'fcdn.stream', 'feurl.com', 'layarkacaxxi.icu',
-'naniplay.nanime.in', 'naniplay.nanime.biz', 'naniplay.com', 'mm9842.com','anonfiles.com', 
-'hotfile.io', 'bayfiles.com', 'megaupload.nz', 'letsupload.cc','filechan.org', 'myfile.is', 
-'vshare.is', 'rapidshare.nu', 'lolabits.se','openload.cc', 'share-online.is', 'upvid.cc']
+ddllist = ['1drv.ms','1fichier.com','4funbox','akmfiles','anonfiles.com','antfiles.com','bayfiles.com','disk.yandex.com',
+           'fcdn.stream','femax20.com','fembed.com','fembed.net','feurl.com','filechan.org','filepress','github.com','hotfile.io',
+           'hxfile.co','krakenfiles.com','layarkacaxxi.icu','letsupload.cc','letsupload.io','linkbox','lolabits.se','mdisk.me',
+           'mediafire.com','megaupload.nz','mirrobox','mm9842.com','momerybox','myfile.is','naniplay.com','naniplay.nanime.biz',
+           'naniplay.nanime.in','nephobox','openload.cc','osdn.net','pixeldrain.com','racaty','rapidshare.nu','sbembed.com',
+           'sbplay.org','share-online.is','shrdsk','solidfiles.com','streamsb.net','streamtape','terabox','teraboxapp','upload.ee',
+           'uptobox.com','upvid.cc','vshare.is','watchsb.com','we.tl','wetransfer.com','yadi.sk','zippyshare.com']
 
 
 def is_share_link(url):
@@ -376,10 +374,10 @@ def pixeldrain(url: str) -> str:
     file_id = url.split("/")[-1]
     if url.split("/")[-2] == "l":
         info_link = f"https://pixeldrain.com/api/list/{file_id}"
-        dl_link = f"https://pixeldrain.com/api/list/{file_id}/zip"
+        dl_link = f"https://pixeldrain.com/api/list/{file_id}/zip?download"
     else:
         info_link = f"https://pixeldrain.com/api/file/{file_id}/info"
-        dl_link = f"https://pixeldrain.com/api/file/{file_id}"
+        dl_link = f"https://pixeldrain.com/api/file/{file_id}?download"
     cget = create_scraper().request
     try:
         resp = cget('get', info_link).json()
@@ -625,19 +623,29 @@ def filepress(url):
     try:
         url = cget('GET', url).url
         raw = urlparse(url)
-        json_data = {
+
+        gd_data = {
             'id': raw.path.split('/')[-1],
             'method': 'publicDownlaod',
         }
+        tg_data = {
+            'id': raw.path.split('/')[-1],
+            'method': 'telegramDownload',
+        }
+        
         api = f'{raw.scheme}://{raw.hostname}/api/file/downlaod/'
-        res = cget('POST', api, headers={
-                   'Referer': f'{raw.scheme}://{raw.hostname}'}, json=json_data).json()
+        
+        gd_res = cget('POST', api, headers={'Referer': f'{raw.scheme}://{raw.hostname}'}, json=gd_data).json()
+        tg_res = cget('POST', api, headers={'Referer': f'{raw.scheme}://{raw.hostname}'}, json=tg_data).json()
+        
     except Exception as e:
-        return (f'ERROR: {e.__class__.__name__}')
-    if 'data' not in res:
-        return (f'ERROR: {res["statusText"]}')
-    return f'https://drive.google.com/uc?id={res["data"]}'
-
+        return f'Google Drive: ERROR: {e.__class__.__name__} \nTelegram: ERROR: {e.__class__.__name__}'
+    
+    gd_result = f'https://drive.google.com/uc?id={gd_res["data"]}' if 'data' in gd_res else f'ERROR: {gd_res["statusText"]}'
+    tg_result = f'https://tghub.xyz/?start={tg_res["data"]}' if 'data' in tg_res else "No Telegram file available "
+    
+    return f'Google Drive: {gd_result} \nTelegram: {tg_result}'
+           
 
 def gdtot(url):
     cget = create_scraper().request
